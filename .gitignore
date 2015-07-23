@@ -26,3 +26,9 @@
 *.exe
 *.out
 *.app
+*.pdb
+*.idb
+build/
+bin/
+*.sublime-project
+*.sublime-workspace
