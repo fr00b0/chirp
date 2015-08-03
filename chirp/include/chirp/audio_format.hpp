@@ -70,6 +70,12 @@ namespace chirp
 
 			/// Retrieve the endianness of the audio format
 			/// @returns The byte order of each individual sample
+			/// @throws byte_order_exception is thrown if the format has samples
+			///                              that is less or equal to one byte
+			///                              size. Byte order does not apply
+			///                              unless the samples are of multiple
+			///                              bytes. 
+			/// @pre this.bits_per_sample() > 8
 			byte_order endianness() const {
 				if( _bits_per_sample <=8 ) {
 					throw byte_order_exception{};
