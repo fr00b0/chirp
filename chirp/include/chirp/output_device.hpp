@@ -16,9 +16,9 @@ namespace chirp
 	class output_device
 	{
 		public:
-			using frequency_value = std::uint32_t;
+			using frequency_type = std::uint32_t;
 
-			audio create_audio( frequency_value frequency, audio_format const& format ) {
+			audio create_audio( frequency_type frequency, audio_format const& format ) {
 				frequency;
 				format;
 				throw "";
