@@ -8,7 +8,7 @@ namespace chirp
 {
 	/// Enumerator that is used for specifying what implementation
 	/// of the audio system that should be used.
-	enum class implementation_request {
+	enum class backend_identity {
 		/// Use the default implementation for the current platform
 		platform_default,
 		direct_sound
@@ -24,7 +24,7 @@ namespace chirp
 			/// Create a audio_platform with a requested implementation
 			/// @throws unsupported_implementation when the requested implementation
 			/// couldn't be created.
-			audio_platform( implementation_request request = implementation_request::platform_default );
+			audio_platform( backend_identity request = backend_identity::platform_default );
 
 			///
 			///

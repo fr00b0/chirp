@@ -11,7 +11,7 @@ namespace chirp
 	
 
 	// constructor
-	audio_platform::audio_platform( implementation_request request ) {
+	audio_platform::audio_platform( backend_identity request ) {
 		request;
 	}
 
