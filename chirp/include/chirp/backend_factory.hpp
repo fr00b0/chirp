@@ -24,7 +24,7 @@ namespace chirp
 		///
 		///
 		backend_identity default_backend();
-	}	
+	}
 }   // namespace chirp
 
 #endif   // IG_CHIRP_BACKEND_FACTORY_HPP

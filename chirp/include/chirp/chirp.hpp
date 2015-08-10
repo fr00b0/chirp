@@ -3,6 +3,9 @@
 
 #include <chirp/output_devices.hpp>
 #include <chirp/audio_format.hpp>
+#include <chirp/backend.hpp>
+
+#include <memory>
 
 namespace chirp
 {
@@ -11,7 +14,7 @@ namespace chirp
 	enum class backend_identity {
 		/// Use the default implementation for the current platform
 		platform_default,
-		direct_sound
+		directsound
 	};
 
 	/// Audio platform
@@ -26,12 +29,21 @@ namespace chirp
 			/// couldn't be created.
 			audio_platform( backend_identity request = backend_identity::platform_default );
 
+
+			/// Create a audio_platform with a already created implementation
+			/// @param platform   The platform to use. The ownership of the
+			///                   instance is transfered to the new object since
+			///                   the unique pointer parameter needs to be moved
+			audio_platform( std::unique_ptr<backend::platform> platform );
+
 			///
 			///
 			///
 			output_device default_output_device() const;
 
 		private:
+			/// Pointer to the current backend implementation
+			std::unique_ptr<backend::platform> _platform_ptr;
 
 	};
 

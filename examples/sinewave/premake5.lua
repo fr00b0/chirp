@@ -7,12 +7,12 @@ project "sinewave"
 	links       { "chirp" }
 	files {
 		"**.hpp",
-		"**.cpp" 		
+		"**.cpp"
 	}
 	-- Debug configuration
 	filter { "debug" }
-		targetdir        ( "../../bin/" .. action .. "/debug/examples" )
+		targetdir( "../../bin/" .. action .. "/debug/examples" )
 
 	-- Release configuration
 	filter { "release" }
-		targetdir        ( "../../bin/" .. action .. "/release/examples" )
+		targetdir( "../../bin/" .. action .. "/release/examples" )

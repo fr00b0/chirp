@@ -7,5 +7,9 @@ project "chirp_tests"
 	links         { "chirp" }
 	files {
 		"**.hpp",
-		"**.cpp" 		
+		"**.cpp"
 	}
+
+	-- Visual studio builds needs directsound library
+	filter { "action:vs*" }
+		links     { "dsound", "dxguid" }

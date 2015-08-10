@@ -2,10 +2,11 @@
 project "chirp"
 	language    "C++"
 	uuid        "11fbb9e1-bc9e-4f73-82a4-ab13c5130204"
-	includedirs { "include" }	
+	includedirs { "include" }
 	files {
 		"include/**.hpp",
-		"src/**.cpp" 		
+		"src/**.hpp",
+		"src/**.cpp"
 	}
 
 	-- Debug configuration, static library
@@ -29,5 +30,5 @@ project "chirp"
 		targetdir   ( "../bin/" .. action .. "/release" )
 
 	-- Visual studio builds will include DirectSound
-	filter { "vs*" }
-		defines { "CHIRP_WITH_DIRECTSOUND" }
+	-- filter { "vs*" }
+	--	defines { "CHIRP_WITH_DIRECTSOUND" }

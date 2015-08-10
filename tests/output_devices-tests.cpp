@@ -41,7 +41,7 @@ SCENARIO( "collections of output devices can be assigned with device descriptons
 			}
 		 	AND_THEN( "the iteration range has elements" ) {
 		 		REQUIRE( std::distance( std::begin(devices), std::end(devices) ) == 3 );
-		 	}			
+		 	}
 		}
 	}
 }
