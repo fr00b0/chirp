@@ -118,6 +118,7 @@ namespace chirp
 
 			private:
 
+				/// Pointer to the active directsound instance
 				IDirectSound8* _ds8_ptr;
 		};
 
@@ -129,9 +130,14 @@ namespace chirp
 		{
 			public:
 				///
-				directsound_audio(directsound_instance& instance, audio_format const& format) {
+				directsound_audio(directsound_instance& instance, audio_format const& format) :
+					_state(audio_state::invalid)
+				{
 					create_buffer( instance, format );
 				}
+
+				///
+				audio_state state() const override;
 
 			private:
 				using buffer_ptr = std::unique_ptr<IDirectSoundBuffer, release_deleter<IDirectSoundBuffer>>;
@@ -144,7 +150,11 @@ namespace chirp
 				/// @throws directsound_exception is thrown if the buffer cannot be locked for writing.
 				void clear_entire_buffer();
 
+				/// Pointer to the directsound buffer
 				buffer_ptr _buffer;
+				/// Current audio state
+				audio_state _state;
+
 		};
 
 		///

@@ -37,6 +37,13 @@ namespace chirp
 				func;
 			}
 
+			///
+			///
+			///
+			bool is_playing() const {
+				return _ptr && _ptr->state() == backend::audio_state::playing;
+			}
+
 			/// Stop audio playback
 			void stop() {
 				throw "";
@@ -46,6 +53,7 @@ namespace chirp
 			audio_format const& format() const {
 				return _format;
 			}
+
 		private:
 			/// The audio format
 			audio_format _format;

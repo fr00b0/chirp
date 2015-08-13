@@ -107,6 +107,7 @@ namespace chirp
 			_buffer = buffer_ptr{ ptr };
 
 			clear_entire_buffer();
+			_state = audio_state::ready;
 		}
 
 		// directsound_audio::clear_entire_buffer()
@@ -128,6 +129,11 @@ namespace chirp
 			if( FAILED(_buffer->Unlock(bytes1_ptr, bytes1_count, bytes2_ptr, bytes2_count)) ) {
 				throw directsound_exception{};
 			}
+		}
+
+		//
+		audio_state directsound_audio::state() const {
+			return _state;
 		}
 	}   // namespace backend
 }   // namespace chirp

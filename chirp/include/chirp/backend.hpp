@@ -10,6 +10,17 @@ namespace chirp
 {
 	namespace backend
 	{
+		/// Enumerator for keeping track of the state of audio instances
+		enum class audio_state {
+			/// The audio instance is in a invalid state, which means it is
+			/// not ready to be played.
+			invalid,
+			/// The audio instance is ready to be played
+			ready,
+			/// The audio instance is playing
+			playing
+		};
+
 		/// Interface for audio implementations
 		///
 		///
@@ -24,6 +35,9 @@ namespace chirp
 					virtual void on_need_samples() = 0;
 
 				};
+
+				///
+				virtual audio_state state() const = 0;
 
 		};
 
