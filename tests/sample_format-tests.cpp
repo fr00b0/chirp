@@ -134,29 +134,29 @@ SCENARIO( "Byte order is not valid for bit_count <=8 formats" ) {
 	}
 }
 
-SCENARIO( "sample_format can report it's sample size, in bytes." ) {
+SCENARIO( "sample_format can report it's frame size, in bytes." ) {
 	GIVEN( "a 8 bit mono sample format" ) {
 		chirp::sample_format format{ 8, 1 };
-		THEN( "the sample size is 1" ) {
-			REQUIRE( format.sample_size_in_bytes() == 1 );
+		THEN( "the frame size is 1" ) {
+			REQUIRE( format.bytes_per_frame() == 1 );
 		}
 	}
 	GIVEN( "a 8 bit stereo sample format" ) {
 		chirp::sample_format format{ 8, 2 };
-		THEN( "the sample size is 2" ) {
-			REQUIRE( format.sample_size_in_bytes() == 2 );
+		THEN( "the frame size is 2" ) {
+			REQUIRE( format.bytes_per_frame() == 2 );
 		}
 	}
 	GIVEN( "a 16 bit mono sample format" ) {
 		chirp::sample_format format{ 16, chirp::byte_order::little_endian, 1 };
-		THEN( "the sample size is 2" ) {
-			REQUIRE( format.sample_size_in_bytes() == 2 );
+		THEN( "the frame size is 2" ) {
+			REQUIRE( format.bytes_per_frame() == 2 );
 		}
 	}
 	GIVEN( "a 16 bit stereo sample format" ) {
 		chirp::sample_format format{ 16, chirp::byte_order::big_endian, 2 };
-		THEN( "the sample size is 4" ) {
-			REQUIRE( format.sample_size_in_bytes() == 4 );
+		THEN( "the frame size is 4" ) {
+			REQUIRE( format.bytes_per_frame() == 4 );
 		}
 	}
 }

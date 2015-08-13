@@ -50,8 +50,8 @@ SCENARIO( "audio_format has accessors for sample_format properties" ) {
 		AND_THEN( "we can access channel count" ) {
 			REQUIRE( format.channels() == 2 );
 		}
-		AND_THEN( "we can access the sample size in bytes" ) {
-			REQUIRE( format.sample_size_in_bytes() == 4 );
+		AND_THEN( "we can access the frame size in bytes" ) {
+			REQUIRE( format.bytes_per_frame() == 4 );
 		}
 	}
 	GIVEN( "a 8 bits audio format" ) {
@@ -65,8 +65,8 @@ SCENARIO( "audio_format has accessors for sample_format properties" ) {
 		AND_THEN( "we can access channel count" ) {
 			REQUIRE( format.channels() == 1 );
 		}
-		AND_THEN( "we can access the sample size in bytes" ) {
-			REQUIRE( format.sample_size_in_bytes() == 1 );
+		AND_THEN( "we can access the frame size in bytes" ) {
+			REQUIRE( format.bytes_per_frame() == 1 );
 		}
 	}
 }

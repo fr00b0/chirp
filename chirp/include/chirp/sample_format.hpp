@@ -103,7 +103,7 @@ namespace chirp
 			}
 
 			///
-			byte_count sample_size_in_bytes() const {
+			byte_count bytes_per_frame() const {
 				return (_bits_per_sample / 8) * _channels;
 			}
 

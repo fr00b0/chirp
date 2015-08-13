@@ -47,8 +47,8 @@ namespace chirp
 			}
 
 			///
-			byte_count sample_size_in_bytes() const {
-				return _sample_format.sample_size_in_bytes();
+			byte_count bytes_per_frame() const {
+				return _sample_format.bytes_per_frame();
 			}
 
 			///
@@ -58,7 +58,7 @@ namespace chirp
 
 			///
 			byte_count bytes_per_second() const {
-				return _sample_format.sample_size_in_bytes() * _frequency;
+				return _sample_format.bytes_per_frame() * _frequency;
 			}
 
 			///
