@@ -1,8 +1,8 @@
--- The test project definition
+-- The chirp project definition
 project "chirp"
 	language    "C++"
 	uuid        "11fbb9e1-bc9e-4f73-82a4-ab13c5130204"
-	includedirs { "include" }
+	includedirs { "include", "src/nod" }
 	files {
 		"include/**.hpp",
 		"src/**.hpp",
