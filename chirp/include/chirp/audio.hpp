@@ -2,10 +2,10 @@
 #define IG_CHIRP_AUDIO_HPP
 
 #include <chirp/backend.hpp>
+#include <chirp/sample_request.hpp>
 
 namespace chirp
 {
-
 	/// Audio class.
 	///
 	/// Audio is something that can be played through an output device.
@@ -27,14 +27,9 @@ namespace chirp
 			///
 			template <class F>
 			void play_async( F func ) {
-				struct provider :
-					backend::audio::sample_provider
-					{
-						void on_need_samples() override
-						{
-						}
-					};
-				func;
+				_ptr->play_async( [&](){
+					func;
+				} );
 			}
 
 			///

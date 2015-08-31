@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <string>
+#include <functional>
 
 namespace chirp
 {
@@ -27,18 +28,20 @@ namespace chirp
 		class audio
 		{
 			public:
+				///
+				using sample_provider_func = std::function<void()>;
+
 				/// Pure virtual destructor
 				virtual ~audio() = 0;
-
-				struct sample_provider
-				{
-					virtual void on_need_samples() = 0;
-
-				};
 
 				///
 				virtual audio_state state() const = 0;
 
+				///
+				virtual void play_async( sample_provider_func ) = 0;
+
+				///
+				virtual void stop() = 0;
 		};
 
 		/// Interface for output devices

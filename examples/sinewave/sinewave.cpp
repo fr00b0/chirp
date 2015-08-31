@@ -14,7 +14,9 @@ int main() {
 		auto audio = device.create_audio( {44100, chirp::sixteen_bits_little_endian_stereo} );
 
 		audio.play_async(
-			[](  ) {
+			[]( chirp::duration_type play_time, chirp::sample_request const& request ) {
+				play_time;
+				request;
 			});
 
 		std::this_thread::sleep_for( std::chrono::milliseconds(1000) );

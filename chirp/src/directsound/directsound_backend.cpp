@@ -21,6 +21,12 @@ namespace
 		devices_ptr->push_back( device_ptr );
 		return TRUE;
 	}
+
+
+	// TEMPORARY CONSTANTS, these will get moved to some form of parameters
+	auto UpdateInterval = std::chrono::milliseconds{10};
+
+
 }   // anonymous namespace
 
 namespace chirp
@@ -74,9 +80,29 @@ namespace chirp
 					throw directsound_exception{};
 				}
 			}
-			return std::make_unique<directsound_audio>( _dsi, format );
+			return std::make_unique<directsound_audio>( *this, format );
 		}
 
+		// ensure_play_thread_is_running()
+		void directsound_output_device::ensure_play_thread_is_running() {
+			if( _play_thread.joinable() ) {
+				return;
+			}
+
+			// start the play thread
+			_abort_play_thread = false;
+			_play_thread = std::thread{
+				[this]() {
+					auto last_update = std::chrono::high_resolution_clock::now();
+					while( !_abort_play_thread ) {
+						std::this_thread::sleep_for( UpdateInterval );
+						auto now = std::chrono::high_resolution_clock::now();
+						this->on_update( std::chrono::duration_cast<chirp::duration_type>(now - last_update) );
+						last_update = now;
+					}
+				}
+			};
+		}
 
 		//-----------------------------------------------------------------
 		// directsound_audio implementation
@@ -89,7 +115,7 @@ namespace chirp
 			waveFormat.nChannels = format.channels();
 			waveFormat.nSamplesPerSec = format.frequency();
 			waveFormat.nAvgBytesPerSec = format.bytes_per_second();
-			waveFormat.nBlockAlign = static_cast<WORD>(format.sample_size_in_bytes());
+			waveFormat.nBlockAlign = static_cast<WORD>(format.bytes_per_frame());
 			waveFormat.wBitsPerSample = format.bits_per_sample();
 			waveFormat.cbSize = 0;
 
@@ -97,7 +123,7 @@ namespace chirp
 			bufferDesc.dwSize = sizeof(DSBUFFERDESC);
 			bufferDesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2;
 			bufferDesc.dwReserved = 0;
-			bufferDesc.dwBufferBytes = BufferSize_SampleCount * format.sample_size_in_bytes();
+			bufferDesc.dwBufferBytes = BufferSize_SampleCount * format.bytes_per_frame();
 			bufferDesc.guid3DAlgorithm = DS3DALG_DEFAULT;
 			bufferDesc.lpwfxFormat = &waveFormat;
 			LPDIRECTSOUNDBUFFER ptr = nullptr;
@@ -131,7 +157,34 @@ namespace chirp
 			}
 		}
 
-		//
+		// update()
+		void directsound_audio::update( duration_type const& delta ) {
+			delta;
+		}
+
+		// play_async()
+		void directsound_audio::play_async( sample_provider_func f ) {
+			_device.ensure_play_thread_is_running();
+			_connection = _device.on_update.connect( std::bind(&directsound_audio::update, this, std::placeholders::_1) );
+			if( FAILED(_buffer->Play(0, 0, DSBPLAY_LOOPING )) ) {
+				stop();
+				_state = audio_state::invalid;
+			}
+			else {
+				_state = audio_state::playing;
+			}
+		}
+
+		// stop()
+		void directsound_audio::stop() {
+			_buffer->Stop();
+			_connection.disconnect();
+			if( _state != audio_state::invalid ) {
+				_state = audio_state::ready;
+			}
+		}
+
+		// state()
 		audio_state directsound_audio::state() const {
 			return _state;
 		}

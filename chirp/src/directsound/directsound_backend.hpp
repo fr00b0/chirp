@@ -7,12 +7,16 @@
 
 #include <chirp/backend.hpp>
 #include <chirp/exceptions.hpp>
+#include <chirp/sample_request.hpp>
+#include <nod/nod.hpp>
 
 #include <dsound.h>
 #include <vector>
 #include <string>
 #include <cstdint>
 #include <cstring>
+#include <thread>
+#include <atomic>
 
 namespace chirp
 {
@@ -125,41 +129,6 @@ namespace chirp
 		///
 		///
 		///
-		class directsound_audio :
-			public backend::audio
-		{
-			public:
-				///
-				directsound_audio(directsound_instance& instance, audio_format const& format) :
-					_state(audio_state::invalid)
-				{
-					create_buffer( instance, format );
-				}
-
-				///
-				audio_state state() const override;
-
-			private:
-				using buffer_ptr = std::unique_ptr<IDirectSoundBuffer, release_deleter<IDirectSoundBuffer>>;
-
-				///
-				///
-				void create_buffer(directsound_instance& instance, audio_format const& format);
-
-				/// Fill the entire buffer with zeros
-				/// @throws directsound_exception is thrown if the buffer cannot be locked for writing.
-				void clear_entire_buffer();
-
-				/// Pointer to the directsound buffer
-				buffer_ptr _buffer;
-				/// Current audio state
-				audio_state _state;
-
-		};
-
-		///
-		///
-		///
 		class directsound_output_device :
 			public backend::output_device
 		{
@@ -169,8 +138,17 @@ namespace chirp
 				/// @param name   The name of the device
 				directsound_output_device( GUID guid, std::string const& name ) :
 					_guid( guid ),
-					_name( name )
+					_name( name ),
+					_abort_play_thread( false )
 				{}
+
+				/// Destructor
+				~directsound_output_device() {
+					_abort_play_thread = true;
+					if( _play_thread.joinable() ) {
+						_play_thread.join();
+					}
+				}
 
 				/// @returns The device guid
 				GUID guid() const {
@@ -187,6 +165,22 @@ namespace chirp
 				///
 				std::unique_ptr<audio> create_audio( audio_format const& format ) override;
 
+				///
+				directsound_instance& directsound() {
+					return _dsi;
+				}
+
+				///
+				directsound_instance const& directsound() const {
+					return _dsi;
+				}
+
+				///
+				void ensure_play_thread_is_running();
+
+				///
+				nod::signal<void(duration_type const&)> on_update;
+
 			private:
 				/// The device guid
 				GUID _guid;
@@ -194,7 +188,63 @@ namespace chirp
 				std::string _name;
 				/// The direct sound instance
 				directsound_instance _dsi;
+				/// Play thread
+				std::thread _play_thread;
+				/// Atomic flag for aborting the play thread
+				std::atomic<bool> _abort_play_thread;
 		};
+
+		///
+		///
+		///
+		class directsound_audio :
+			public backend::audio
+		{
+			public:
+				///
+				directsound_audio(directsound_output_device& device, audio_format const& format) :
+					_device(device),
+					_state(audio_state::invalid),
+					_play_duration(0.0)
+				{
+					create_buffer( _device.directsound(), format );
+				}
+
+				///
+				audio_state state() const override;
+
+				///
+				void play_async( sample_provider_func f ) override;
+
+				///
+				void stop() override;
+
+				///
+				void update( duration_type const& delta );
+
+			private:
+				using buffer_ptr = std::unique_ptr<IDirectSoundBuffer, release_deleter<IDirectSoundBuffer>>;
+
+				///
+				///
+				void create_buffer(directsound_instance& instance, audio_format const& format);
+
+				/// Fill the entire buffer with zeros
+				/// @throws directsound_exception is thrown if the buffer cannot be locked for writing.
+				void clear_entire_buffer();
+
+				/// Device reference
+				directsound_output_device& _device;
+				/// Pointer to the directsound buffer
+				buffer_ptr _buffer;
+				/// Current audio state
+				audio_state _state;
+				/// Connection to the device update callback
+				nod::scoped_connection _connection;
+				/// The amount of time that has been played
+				chirp::duration_type _play_duration;
+		};
+
 
 		///
 		///

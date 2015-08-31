@@ -10,11 +10,16 @@ namespace chirp
 {
 	namespace backend
 	{
+		///
+		///
+		///
 		class factory
 		{
 			public:
+				///
 				factory();
 
+				///
 				std::unique_ptr<platform> create_platform( backend_identity request ) const;
 		};
 
