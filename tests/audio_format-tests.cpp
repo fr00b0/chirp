@@ -80,6 +80,16 @@ SCENARIO( "audio_formats can report bytes per second" ) {
 	}
 }
 
+SCENARIO( "audio_formats can report duration per frame" ) {
+	GIVEN( "a audio format" ) {
+		chirp::audio_format format{ 44100, {16, chirp::byte_order::little_endian, 2} };
+		THEN( "we can retrieve the duration per frame of the audio format" ) {
+			auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>( format.duration_per_frame() ).count();
+			REQUIRE( nanoseconds == 22675 );
+		}
+	}
+}
+
 SCENARIO( "audio formats can be compared with operator ==" ) {
 	GIVEN( "two equivalent sample formats" ) {
 		chirp::audio_format format1{ 44100, chirp::sixteen_bits_little_endian_stereo };
