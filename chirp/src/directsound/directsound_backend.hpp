@@ -22,9 +22,6 @@ namespace chirp
 {
 	namespace backend
 	{
-		// Constants
-		std::uint32_t const BufferSize_SampleCount = 10000;
-
 		// Exceptions
 
 		struct directsound_exception : chirp::backend_exception {};
@@ -204,10 +201,17 @@ namespace chirp
 				///
 				directsound_audio(directsound_output_device& device, audio_format const& format) :
 					_device(device),
+					_format(format),
 					_state(audio_state::invalid),
-					_play_duration(0.0)
+					_play_duration(0.0),
+					_current_write_position(0)
 				{
 					create_buffer( _device.directsound(), format );
+				}
+
+				///
+				~directsound_audio() {
+					stop();
 				}
 
 				///
@@ -233,16 +237,31 @@ namespace chirp
 				/// @throws directsound_exception is thrown if the buffer cannot be locked for writing.
 				void clear_entire_buffer();
 
+				///
+				///
+				void issue_sample_request( void* ptr, std::uint32_t size, std::uint32_t buffer_bytes );
+
+				///
+				void restore_lost_buffer();
+
 				/// Device reference
 				directsound_output_device& _device;
+				/// Audio format
+				audio_format _format;
 				/// Pointer to the directsound buffer
 				buffer_ptr _buffer;
 				/// Current audio state
-				audio_state _state;
+				std::atomic<audio_state> _state;
 				/// Connection to the device update callback
 				nod::scoped_connection _connection;
 				/// The amount of time that has been played
 				chirp::duration_type _play_duration;
+				/// Mutex for syncronizing the internal state
+				std::mutex _mutex;
+				/// The buffer position where we stopped writing last time
+				std::uint32_t _current_write_position;
+				/// Current callback for handling sample requests
+				sample_provider_func _sample_provider;
 		};
 
 

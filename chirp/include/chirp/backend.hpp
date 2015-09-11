@@ -2,6 +2,7 @@
 #define IG_CHIRP_BACKEND_HPP
 
 #include <chirp/audio_format.hpp>
+#include <chirp/sample_request.hpp>
 
 #include <memory>
 #include <string>
@@ -29,7 +30,7 @@ namespace chirp
 		{
 			public:
 				///
-				using sample_provider_func = std::function<void()>;
+				using sample_provider_func = std::function<void(duration_type const&, sample_request const&)>;
 
 				/// Pure virtual destructor
 				virtual ~audio() = 0;

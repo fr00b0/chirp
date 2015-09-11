@@ -2,8 +2,10 @@
 
 #if defined(CHIRP_WITH_DIRECTSOUND)
 
+#define NOMINMAX
 #include <Windows.h>
 #include <algorithm>
+#include <mutex>
 
 namespace
 {
@@ -24,8 +26,9 @@ namespace
 
 
 	// TEMPORARY CONSTANTS, these will get moved to some form of parameters
-	auto UpdateInterval = std::chrono::milliseconds{10};
-
+	auto const BufferSize_seconds = std::chrono::seconds{2};
+	auto const UpdateInterval = std::chrono::milliseconds{10};
+	auto const WriteAheadLimit = std::chrono::milliseconds{500};
 
 }   // anonymous namespace
 
@@ -76,7 +79,7 @@ namespace chirp
 		std::unique_ptr<audio> directsound_output_device::create_audio( audio_format const& format ) {
 			if( !_dsi ) {
 				_dsi = directsound_instance{ _guid };
-				if( FAILED(_dsi.ptr()->SetCooperativeLevel(::GetDesktopWindow(), DSSCL_NORMAL)) ) {
+				if( FAILED(_dsi.ptr()->SetCooperativeLevel( ::GetDesktopWindow(), DSSCL_NORMAL)) ) {
 					throw directsound_exception{};
 				}
 			}
@@ -121,15 +124,16 @@ namespace chirp
 
 			DSBUFFERDESC bufferDesc;
 			bufferDesc.dwSize = sizeof(DSBUFFERDESC);
-			bufferDesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2;
+			bufferDesc.dwFlags = DSBCAPS_GLOBALFOCUS | DSBCAPS_GETCURRENTPOSITION2;
 			bufferDesc.dwReserved = 0;
-			bufferDesc.dwBufferBytes = BufferSize_SampleCount * format.bytes_per_frame();
+			bufferDesc.dwBufferBytes = static_cast<DWORD>( BufferSize_seconds.count() * format.bytes_per_second() );
 			bufferDesc.guid3DAlgorithm = DS3DALG_DEFAULT;
 			bufferDesc.lpwfxFormat = &waveFormat;
 			LPDIRECTSOUNDBUFFER ptr = nullptr;
 			if( FAILED(instance.ptr()->CreateSoundBuffer(&bufferDesc, &ptr, nullptr)) ) {
 				throw directsound_exception{};
 			}
+			ptr->SetFormat(&waveFormat);
 			_buffer = buffer_ptr{ ptr };
 
 			clear_entire_buffer();
@@ -157,17 +161,91 @@ namespace chirp
 			}
 		}
 
+		// restore_lost_buffer()
+		void directsound_audio::restore_lost_buffer()
+		{
+			DWORD status = 0;
+			if( !FAILED(_buffer->GetStatus(&status)) )
+			{
+				if( status & DSBSTATUS_BUFFERLOST )
+				{
+					if( !FAILED(_buffer->Restore()) ) {
+						clear_entire_buffer();
+					}
+				}
+			}
+		}
+
 		// update()
 		void directsound_audio::update( duration_type const& delta ) {
 			delta;
+
+			auto limit_duration_ms = static_cast<DWORD>(std::chrono::duration_cast<std::chrono::milliseconds>(WriteAheadLimit).count());
+			auto limit_byte_count = static_cast<DWORD>((_format.bytes_per_second() * limit_duration_ms) / std::milli{}.den);
+			auto buffer_bytes = static_cast<DWORD>(BufferSize_seconds.count()*_format.bytes_per_second());
+
+			restore_lost_buffer();
+
+			DWORD read_cursor = 0;
+			DWORD write_cursor = 0;
+			if( FAILED(_buffer->GetCurrentPosition(&read_cursor, &write_cursor) ) ) {
+				stop();
+			}
+			else {
+				// We want to write data to the buffer, from the last write position
+				// (making sure we are beyond the write cursor of the buffer)
+				// and to the play cursor (wrapping around), but we also want to
+				// respect the write-ahead limitation.
+
+				// Let's check if we need to wait until we can write more data to the buffer
+				DWORD written_ahead_bytes = (_current_write_position >= read_cursor) ? (_current_write_position - read_cursor) : (buffer_bytes - read_cursor + _current_write_position);
+				if( written_ahead_bytes >= limit_byte_count ) {
+					return;
+				}
+
+				DWORD from = _current_write_position; //std::max<DWORD>( write_cursor, _current_write_position );
+				DWORD unsafe_bytes = (read_cursor <= write_cursor) ? (write_cursor - read_cursor) : (buffer_bytes - read_cursor + write_cursor);
+				DWORD byte_count =
+					std::min<DWORD>(
+						buffer_bytes - unsafe_bytes,
+						limit_byte_count
+					);
+
+				void* ptr1 = nullptr;
+				void* ptr2 = nullptr;
+				DWORD size1 = 0;
+				DWORD size2 = 0;
+				if( !FAILED(_buffer->Lock( from, byte_count, &ptr1, &size1, &ptr2, &size2, 0 )) ) {
+					issue_sample_request( ptr1, size1, buffer_bytes );
+					if( ptr2 != nullptr ) {
+						issue_sample_request( ptr2, size2, buffer_bytes );
+					}
+					_buffer->Unlock(ptr1, size1, ptr2, size2);
+				}
+			}
+		}
+
+		// issue_sample_request()
+		void directsound_audio::issue_sample_request( void* ptr, std::uint32_t size, std::uint32_t buffer_bytes ) {
+			std::memset( ptr, 0, size );
+			_sample_provider( _play_duration, sample_request{ptr, size, _format} );
+			_play_duration += std::chrono::microseconds( (std::micro::den * size) / _format.bytes_per_second() );
+			_current_write_position = _current_write_position + size;
+			if( _current_write_position >= buffer_bytes ) {
+				_current_write_position -= buffer_bytes;
+			}
 		}
 
 		// play_async()
 		void directsound_audio::play_async( sample_provider_func f ) {
+			std::unique_lock<std::mutex> lock{_mutex};
+			_sample_provider = f;
 			_device.ensure_play_thread_is_running();
 			_connection = _device.on_update.connect( std::bind(&directsound_audio::update, this, std::placeholders::_1) );
-			if( FAILED(_buffer->Play(0, 0, DSBPLAY_LOOPING )) ) {
-				stop();
+			auto hr = _buffer->Play(0, 0, DSBPLAY_LOOPING );
+			if( FAILED(hr) ) {
+				_buffer->Stop();
+				_connection.disconnect();
 				_state = audio_state::invalid;
 			}
 			else {
@@ -177,15 +255,26 @@ namespace chirp
 
 		// stop()
 		void directsound_audio::stop() {
-			_buffer->Stop();
-			_connection.disconnect();
-			if( _state != audio_state::invalid ) {
+			std::unique_lock<std::mutex> lock{_mutex};
+			if( _state == audio_state::playing ) {
+				_buffer->Stop();
+				_connection.disconnect();
 				_state = audio_state::ready;
 			}
 		}
 
 		// state()
 		audio_state directsound_audio::state() const {
+			if( _state == audio_state::playing ) {
+				DWORD status = 0;
+				if( !FAILED( _buffer->GetStatus(&status) ) ) {
+					if( status & DSBSTATUS_PLAYING ) {
+						return audio_state::playing;
+					}
+					return audio_state::ready;
+				}
+				return audio_state::invalid;
+			}
 			return _state;
 		}
 	}   // namespace backend

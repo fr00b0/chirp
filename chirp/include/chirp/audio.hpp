@@ -27,9 +27,7 @@ namespace chirp
 			///
 			template <class F>
 			void play_async( F func ) {
-				_ptr->play_async( [&](){
-					func;
-				} );
+				_ptr->play_async( func );
 			}
 
 			///
@@ -41,7 +39,7 @@ namespace chirp
 
 			/// Stop audio playback
 			void stop() {
-				throw "";
+				_ptr->stop();
 			}
 
 			/// @returns the audio format

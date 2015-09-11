@@ -3,13 +3,8 @@
 
 #include <chirp/audio_format.hpp>
 
-#include <chrono>
-#include <cstdint>
-
 namespace chirp
 {
-	/// duration type
-	using duration_type = std::chrono::duration<float>;
 
 	/// A request for samples to fill a target buffer.
 	class sample_request
