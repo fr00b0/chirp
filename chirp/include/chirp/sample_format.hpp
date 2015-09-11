@@ -39,7 +39,8 @@ namespace chirp
 			sample_format( bit_count bits_per_sample, channel_count channels ) :
 				_bits_per_sample( bits_per_sample ),
 				_endianness( byte_order::little_endian ),
-				_channels( channels )
+				_channels( channels ),
+				_bytes_per_frame( (_bits_per_sample / 8) * _channels )
 			{
 				if( _bits_per_sample > 8 ) {
 					throw byte_order_exception{};
@@ -56,7 +57,8 @@ namespace chirp
 			sample_format( bit_count bits_per_sample, byte_order endianness, channel_count channels ) :
 				_bits_per_sample( bits_per_sample ),
 				_endianness( endianness ),
-				_channels( channels )
+				_channels( channels ),
+				_bytes_per_frame( (_bits_per_sample / 8) * _channels )
 			{
 				if( _bits_per_sample <= 8 ) {
 					throw byte_order_exception{};
@@ -104,13 +106,14 @@ namespace chirp
 
 			///
 			byte_count bytes_per_frame() const {
-				return (_bits_per_sample / 8) * _channels;
+				return _bytes_per_frame;
 			}
 
 		private:
-			bit_count _bits_per_sample;   ///< The number of bits per individual sample
-			byte_order _endianness;       ///< The byte order of each sample
-			channel_count _channels;      ///< The number of interleaved channels
+			bit_count _bits_per_sample;    ///< The number of bits per individual sample
+			byte_order _endianness;        ///< The byte order of each sample
+			channel_count _channels;       ///< The number of interleaved channels
+			byte_count _bytes_per_frame;   ///< The number of bytes per frame
 	};
 
 
