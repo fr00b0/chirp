@@ -67,10 +67,10 @@ int main( int argc, char const* argv[] ) {
 		/// Let's create the autio platform, device and audio instance to use
 		chirp::audio_platform platform;
 		auto device = platform.default_output_device();
-		auto audio = device.create_audio( {44100, chirp::sixteen_bits_little_endian_mono} );
+		auto stream = device.create_audio_stream( {44100, chirp::sixteen_bits_little_endian_mono} );
 
 		// Let's start playing (and generating) the audio 
-		audio.play_async(
+		stream.play_async(
 			[&args]( chirp::duration_type play_time, chirp::sample_request const& request ) {
 				auto* ptr = static_cast<std::int16_t*>(request.buffer_start());
 				for( std::uint32_t i=0; i<request.frames(); ++i ) {

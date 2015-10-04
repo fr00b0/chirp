@@ -12,8 +12,8 @@ namespace chirp
 {
 	namespace backend
 	{
-		/// Enumerator for keeping track of the state of audio instances
-		enum class audio_state {
+		/// Enumerator for keeping track of the state of audio_stream instances
+		enum class audio_stream_state {
 			/// The audio instance is in a invalid state, which means it is
 			/// not ready to be played.
 			invalid,
@@ -26,17 +26,17 @@ namespace chirp
 		/// Interface for audio implementations
 		///
 		///
-		class audio
+		class audio_stream
 		{
 			public:
 				///
 				using sample_provider_func = std::function<void(duration_type const&, sample_request const&)>;
 
 				/// Pure virtual destructor
-				virtual ~audio() = 0;
+				virtual ~audio_stream() = 0;
 
 				///
-				virtual audio_state state() const = 0;
+				virtual audio_stream_state state() const = 0;
 
 				///
 				virtual void play_async( sample_provider_func ) = 0;
@@ -64,7 +64,7 @@ namespace chirp
 				///
 				///
 				///
-				virtual std::unique_ptr<audio> create_audio( audio_format const& format ) = 0;
+				virtual std::unique_ptr<audio_stream> create_audio_stream( audio_format const& format ) = 0;
 		};
 
 		/// Interface for audio platform implementations
@@ -89,7 +89,7 @@ namespace chirp
 		}
 
 		// destructor implementation
-		inline audio::~audio() {
+		inline audio_stream::~audio_stream() {
 		}
 
 		// destructor implementation

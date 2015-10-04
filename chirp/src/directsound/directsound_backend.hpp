@@ -24,12 +24,14 @@ namespace chirp
 	{
 		// Exceptions
 
-		struct directsound_exception : chirp::backend_exception {};
+		/// Root exceptions for all exceptional events within the directsound
+		/// backend.
+		struct directsound_exception :
+			chirp::backend_exception
+		{};
 
-		///
-		///
-		///
-		///
+		/// Custom deleter used in conjunction with smart pointers to releaes
+		/// COM-objekts with a call to the member function Release()
 		template <class T>
 		struct release_deleter
 		{
@@ -40,12 +42,12 @@ namespace chirp
 			}
 		};
 
-		///
-		///
-		///
+		/// Quick wrapper around the directsound instance object representing
+		/// a sound device.
 		class directsound_instance
 		{
 			public:
+				// Not copy-constructable or copy-assignable
 				directsound_instance( directsound_instance const& ) = delete;
 				directsound_instance& operator=( directsound_instance const& ) = delete;
 
@@ -55,6 +57,8 @@ namespace chirp
 				{}
 
 				/// Parameterized constructor
+				/// @param device_guid   The guid of the device to create the
+				///                      directsound instance for.
 				directsound_instance( GUID device_guid ) {
 					if( FAILED(::DirectSoundCreate8( &device_guid, &_ds8_ptr, nullptr )) ) {
 						throw directsound_exception{};
@@ -94,7 +98,8 @@ namespace chirp
 					return _ds8_ptr;
 				}
 
-				///
+				/// Negation operator
+				/// @returns `true` if the pointer is nullptr.
 				bool operator!() const {
 					return ptr() == nullptr;
 				}
@@ -123,9 +128,7 @@ namespace chirp
 				IDirectSound8* _ds8_ptr;
 		};
 
-		///
-		///
-		///
+		/// Audio device implementation for the directsound backend
 		class directsound_output_device :
 			public backend::output_device
 		{
@@ -157,25 +160,24 @@ namespace chirp
 					return _name;
 				}
 
-				///
-				///
-				///
-				std::unique_ptr<audio> create_audio( audio_format const& format ) override;
+				/// Create a new audio stream instance with a given format.
+				std::unique_ptr<audio_stream> create_audio_stream( audio_format const& format ) override;
 
-				///
+				/// @returns reference to the directsound instance for this device
 				directsound_instance& directsound() {
 					return _dsi;
 				}
 
-				///
+				/// @returns reference to the directsound instance for this device
 				directsound_instance const& directsound() const {
 					return _dsi;
 				}
 
-				///
+				/// Start the device play thread if it is not running.
 				void ensure_play_thread_is_running();
 
-				///
+				/// Singal that will be will be invoked each update tick
+				/// of the play thread.
 				nod::signal<void(duration_type const&)> on_update;
 
 			private:
@@ -191,57 +193,77 @@ namespace chirp
 				std::atomic<bool> _abort_play_thread;
 		};
 
-		///
-		///
-		///
-		class directsound_audio :
-			public backend::audio
+		/// Audio stream implementation for the directsound backend.
+		class directsound_audio_stream :
+			public backend::audio_stream
 		{
 			public:
-				///
-				directsound_audio(directsound_output_device& device, audio_format const& format) :
+				/// Create a directsound audio stream instance.
+				/// @param device   The directsound audio device that is to
+				///                 play the audio stream.
+				/// @param format   The requested format of the audio stream
+				/// @throws directsound_exception if the audio stream cannot
+				///         be created.
+				directsound_audio_stream(directsound_output_device& device, audio_format const& format) :
 					_device(device),
 					_format(format),
-					_state(audio_state::invalid),
+					_state(audio_stream_state::invalid),
 					_play_duration(0.0),
 					_current_write_position(0)
 				{
 					create_buffer( _device.directsound(), format );
 				}
 
-				///
-				~directsound_audio() {
+				/// Destroy the audio stream.
+				~directsound_audio_stream() {
 					stop();
 				}
 
-				///
-				audio_state state() const override;
+				/// @returns the state of the audio stream
+				audio_stream_state state() const override;
 
-				///
+				/// Start playing the audio stream asyncronously
 				void play_async( sample_provider_func f ) override;
 
-				///
+				/// Stop playing the audio stream if it is playing
 				void stop() override;
 
-				///
+				/// Update function that will be called by the play thread
+				/// at each update tick while the audio stream is playing.
+				/// This function is responsible for requesting new samples
+				/// to send to the device.
+				/// @param delta   The time duration since the last time the
+				///                update function was called for this audio
+				///                stream instance.
 				void update( duration_type const& delta );
 
 			private:
+				/// Unique pointer type to the underlying directsound buffer
 				using buffer_ptr = std::unique_ptr<IDirectSoundBuffer, release_deleter<IDirectSoundBuffer>>;
 
-				///
-				///
+				/// Create the underlying directsound buffer
+				/// @param instance   The directsound device instance
+				/// @param format     The requested format of the sound buffer
+				///                   to be created.
+				/// @throws directsound_exception is throw if the buffer cannot
+				///         be created.
 				void create_buffer(directsound_instance& instance, audio_format const& format);
 
 				/// Fill the entire buffer with zeros
 				/// @throws directsound_exception is thrown if the buffer cannot be locked for writing.
 				void clear_entire_buffer();
 
-				///
-				///
+				/// Create a sample request and call the current sample provider
+				/// @param ptr            Pointer into the directsound buffer
+				///                       where samples should be written.
+				/// @param size           The number of bytes of the memory
+				///                       buffer that should be filled with
+				///                       samples.
+				/// @param buffer_bytes   The total number of bytes of the 
+				///                       directsound buffer of the request.
 				void issue_sample_request( void* ptr, std::uint32_t size, std::uint32_t buffer_bytes );
 
-				///
+				/// Restore the directsound buffer if it has been lost
 				void restore_lost_buffer();
 
 				/// Device reference
@@ -251,7 +273,7 @@ namespace chirp
 				/// Pointer to the directsound buffer
 				buffer_ptr _buffer;
 				/// Current audio state
-				std::atomic<audio_state> _state;
+				std::atomic<audio_stream_state> _state;
 				/// Connection to the device update callback
 				nod::scoped_connection _connection;
 				/// The amount of time that has been played
@@ -265,15 +287,14 @@ namespace chirp
 		};
 
 
-		///
-		///
+		/// Implementation of the directsound platform
 		class directsound_platform :
 			public backend::platform
 		{
 			public:
 				// typedefs
 				using output_device_ptr = std::shared_ptr<directsound_output_device>;
-				using output_device_vector = std::vector<output_device_ptr>;
+				using output_device_collection = std::vector<output_device_ptr>;
 
 				/// Default constructor
 				directsound_platform();
@@ -281,17 +302,17 @@ namespace chirp
 				~directsound_platform();
 
 
-				///
+				/// Create an instance of the default outout device
 				std::shared_ptr<output_device> default_output_device() const override;
 
 			private:
-				///
-				///
-				///
-				output_device_vector enumerate_output_devices() const;
 
-				/// Vector with all available output devices
-				output_device_vector _output_devices;
+				/// Retrieve a collection of all available output devices
+				/// @returns Collection of output devices
+				output_device_collection get_output_devices() const;
+
+				/// Collection with all available output devices
+				output_device_collection _output_devices;
 		};
 	}   // namespace backend
 }   // namespace chirp

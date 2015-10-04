@@ -2,7 +2,7 @@
 #define IG_CHIRP_OUTPUT_DEVICE_HPP
 
 #include <chirp/audio_format.hpp>
-#include <chirp/audio.hpp>
+#include <chirp/audio_stream.hpp>
 #include <chirp/backend.hpp>
 #include <cstdint>
 #include <memory>
@@ -41,8 +41,8 @@ namespace chirp
 			///
 			///
 			///
-			audio create_audio( audio_format const& format ) {
-				return audio{ format, _device_ptr->create_audio( format ) };
+			audio_stream create_audio_stream( audio_format const& format ) {
+				return audio_stream{ format, _device_ptr->create_audio_stream( format ) };
 			}
 
 		private:

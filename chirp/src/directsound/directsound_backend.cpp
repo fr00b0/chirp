@@ -11,7 +11,7 @@ namespace
 {
 	// Enumeration function for direct sound devices
 	BOOL CALLBACK enumProc( LPGUID guid_ptr, LPCSTR name, LPCSTR /*module*/, LPVOID context_ptr ) {
-		auto* devices_ptr = reinterpret_cast<chirp::backend::directsound_platform::output_device_vector*>(context_ptr);
+		auto* devices_ptr = reinterpret_cast<chirp::backend::directsound_platform::output_device_collection*>(context_ptr);
 		if( devices_ptr == nullptr ) {
 			return FALSE;
 		}
@@ -42,7 +42,7 @@ namespace chirp
 
 		// directsound_platform default constructor
 		directsound_platform::directsound_platform() :
-			_output_devices( enumerate_output_devices() )
+			_output_devices( get_output_devices() )
 		{
 		}
 		// directsound_platform destructor
@@ -62,8 +62,8 @@ namespace chirp
 		}
 
 		// directsound_platform::enumerate_output_devices()
-		directsound_platform::output_device_vector directsound_platform::enumerate_output_devices() const {
-			output_device_vector result;
+		directsound_platform::output_device_collection directsound_platform::get_output_devices() const {
+			output_device_collection result;
 			auto hr = ::DirectSoundEnumerateA(reinterpret_cast<LPDSENUMCALLBACKA>(enumProc), reinterpret_cast<LPVOID>(&result));
 			if( FAILED(hr) ) {
 				throw directsound_exception{};
@@ -75,15 +75,15 @@ namespace chirp
 		// directsound_output_device implementation
 		//-----------------------------------------------------------------
 
-		// directsound_output_device::create_audio()
-		std::unique_ptr<audio> directsound_output_device::create_audio( audio_format const& format ) {
+		// directsound_output_device::create_audio_stream()
+		std::unique_ptr<audio_stream> directsound_output_device::create_audio_stream( audio_format const& format ) {
 			if( !_dsi ) {
 				_dsi = directsound_instance{ _guid };
 				if( FAILED(_dsi.ptr()->SetCooperativeLevel( ::GetDesktopWindow(), DSSCL_NORMAL)) ) {
 					throw directsound_exception{};
 				}
 			}
-			return std::make_unique<directsound_audio>( *this, format );
+			return std::make_unique<directsound_audio_stream>( *this, format );
 		}
 
 		// ensure_play_thread_is_running()
@@ -108,11 +108,11 @@ namespace chirp
 		}
 
 		//-----------------------------------------------------------------
-		// directsound_audio implementation
+		// directsound_audio_stream implementation
 		//-----------------------------------------------------------------
 
-		// directsound_audio::create_buffer()
-		void directsound_audio::create_buffer(directsound_instance& instance, audio_format const& format) {
+		// directsound_audio_stream::create_buffer()
+		void directsound_audio_stream::create_buffer(directsound_instance& instance, audio_format const& format) {
 			WAVEFORMATEX waveFormat;
 			waveFormat.wFormatTag = WAVE_FORMAT_PCM;
 			waveFormat.nChannels = format.channels();
@@ -137,11 +137,11 @@ namespace chirp
 			_buffer = buffer_ptr{ ptr };
 
 			clear_entire_buffer();
-			_state = audio_state::ready;
+			_state = audio_stream_state::ready;
 		}
 
-		// directsound_audio::clear_entire_buffer()
-		void directsound_audio::clear_entire_buffer() {
+		// directsound_audio_stream::clear_entire_buffer()
+		void directsound_audio_stream::clear_entire_buffer() {
 			LPVOID bytes1_ptr = nullptr;
 			DWORD bytes1_count = 0;
 			LPVOID bytes2_ptr = nullptr;
@@ -162,7 +162,7 @@ namespace chirp
 		}
 
 		// restore_lost_buffer()
-		void directsound_audio::restore_lost_buffer()
+		void directsound_audio_stream::restore_lost_buffer()
 		{
 			DWORD status = 0;
 			if( !FAILED(_buffer->GetStatus(&status)) )
@@ -177,7 +177,7 @@ namespace chirp
 		}
 
 		// update()
-		void directsound_audio::update( duration_type const& delta ) {
+		void directsound_audio_stream::update( duration_type const& delta ) {
 			delta;
 
 			auto limit_duration_ms = static_cast<DWORD>(std::chrono::duration_cast<std::chrono::milliseconds>(WriteAheadLimit).count());
@@ -226,7 +226,7 @@ namespace chirp
 		}
 
 		// issue_sample_request()
-		void directsound_audio::issue_sample_request( void* ptr, std::uint32_t size, std::uint32_t buffer_bytes ) {
+		void directsound_audio_stream::issue_sample_request( void* ptr, std::uint32_t size, std::uint32_t buffer_bytes ) {
 			std::memset( ptr, 0, size );
 			_sample_provider( _play_duration, sample_request{ptr, size, _format} );
 			_play_duration += std::chrono::microseconds( (std::micro::den * size) / _format.bytes_per_second() );
@@ -237,43 +237,43 @@ namespace chirp
 		}
 
 		// play_async()
-		void directsound_audio::play_async( sample_provider_func f ) {
+		void directsound_audio_stream::play_async( sample_provider_func f ) {
 			std::unique_lock<std::mutex> lock{_mutex};
 			_sample_provider = f;
 			_device.ensure_play_thread_is_running();
-			_connection = _device.on_update.connect( std::bind(&directsound_audio::update, this, std::placeholders::_1) );
+			_connection = _device.on_update.connect( std::bind(&directsound_audio_stream::update, this, std::placeholders::_1) );
 			auto hr = _buffer->Play(0, 0, DSBPLAY_LOOPING );
 			if( FAILED(hr) ) {
 				_buffer->Stop();
 				_connection.disconnect();
-				_state = audio_state::invalid;
+				_state = audio_stream_state::invalid;
 			}
 			else {
-				_state = audio_state::playing;
+				_state = audio_stream_state::playing;
 			}
 		}
 
 		// stop()
-		void directsound_audio::stop() {
+		void directsound_audio_stream::stop() {
 			std::unique_lock<std::mutex> lock{_mutex};
-			if( _state == audio_state::playing ) {
+			if( _state == audio_stream_state::playing ) {
 				_buffer->Stop();
 				_connection.disconnect();
-				_state = audio_state::ready;
+				_state = audio_stream_state::ready;
 			}
 		}
 
 		// state()
-		audio_state directsound_audio::state() const {
-			if( _state == audio_state::playing ) {
+		audio_stream_state directsound_audio_stream::state() const {
+			if( _state == audio_stream_state::playing ) {
 				DWORD status = 0;
 				if( !FAILED( _buffer->GetStatus(&status) ) ) {
 					if( status & DSBSTATUS_PLAYING ) {
-						return audio_state::playing;
+						return audio_stream_state::playing;
 					}
-					return audio_state::ready;
+					return audio_stream_state::ready;
 				}
-				return audio_state::invalid;
+				return audio_stream_state::invalid;
 			}
 			return _state;
 		}

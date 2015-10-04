@@ -13,7 +13,7 @@ namespace test
 			return _name;
 		}
 
-		std::unique_ptr<chirp::backend::audio> create_audio( chirp::audio_format const& ) override {
+		std::unique_ptr<chirp::backend::audio_stream> create_audio_stream( chirp::audio_format const& ) override {
 			throw std::exception{};
 		}
 
