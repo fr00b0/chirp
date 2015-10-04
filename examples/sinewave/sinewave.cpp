@@ -62,6 +62,11 @@ std::int16_t sinewave_sample( int frequency, chirp::duration_type time )
 ///
 int main( int argc, char const* argv[] ) {
 	try {
+		if( argc == 2 && std::string{argv[1]} == "--help" ) {
+			std::cerr << "usage: sinewave.exe <frequency> <duration_ms>" << std::endl;
+			return 0;			
+		}
+
 		arguments args{ argc, argv };
 
 		/// Let's create the autio platform, device and audio instance to use
