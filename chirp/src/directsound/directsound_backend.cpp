@@ -52,7 +52,7 @@ namespace chirp
 		// directsound_platform::default_ouput_device()
 		directsound_platform::output_device_ptr directsound_platform::default_output_device() const {
 			auto it = std::find_if( std::begin(_output_devices), std::end(_output_devices),
-				[]( output_device_ptr const& device_ptr ){
+				[]( auto const& device_ptr ){
 					return device_ptr->guid() == DSDEVID_DefaultPlayback;
 				});
 			if( it == std::end(_output_devices) ) {
@@ -68,7 +68,7 @@ namespace chirp
 
 		// directsound_platform::get_directsound_output_devices()
 		directsound_platform::directsound_output_device_collection directsound_platform::get_directsound_output_devices() const {
-			output_device_collection result;
+			directsound_output_device_collection result;
 			auto hr = ::DirectSoundEnumerateA(reinterpret_cast<LPDSENUMCALLBACKA>(enumProc), reinterpret_cast<LPVOID>(&result));
 			if( FAILED(hr) ) {
 				throw directsound_exception{};

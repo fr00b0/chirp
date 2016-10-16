@@ -163,6 +163,9 @@ namespace chirp
 				/// Create a new audio stream instance with a given format.
 				std::unique_ptr<audio_stream> create_audio_stream( audio_format const& format ) override;
 
+				/// Check for equality
+				bool operator==(output_device const& other) const override;
+
 				/// @returns reference to the directsound instance for this device
 				directsound_instance& directsound() {
 					return _dsi;
@@ -312,7 +315,7 @@ namespace chirp
 
 				/// Retrieve a collection of all available output devices
 				/// @returns Collection of output devices
-				directsound_output_device_collection get_ds_output_devices() const;
+				directsound_output_device_collection get_directsound_output_devices() const;
 
 				/// Collection with all available output devices
 				directsound_output_device_collection _output_devices;
