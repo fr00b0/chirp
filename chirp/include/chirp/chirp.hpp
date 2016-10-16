@@ -41,6 +41,11 @@ namespace chirp
 			///
 			output_device default_output_device() const;
 
+			///
+			///
+			///
+			output_devices get_output_devices() const;
+
 		private:
 			/// Pointer to the current backend implementation
 			std::unique_ptr<backend::platform> _platform_ptr;

@@ -35,4 +35,10 @@ namespace chirp
 		return output_device{ _platform_ptr->default_output_device() };
 	}
 
+	// get_output_devices()
+	output_devices audio_platform::get_output_devices() const {
+		auto devs = _platform_ptr->get_output_devices();
+		return output_devices( std::begin(devs), std::end(devs) );
+	}
+
 }   // namespace chirp
