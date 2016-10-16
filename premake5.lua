@@ -46,6 +46,7 @@ solution "chirp"
 		defines          { "_DEBUG", "DEBUG" }
 		flags            { "Symbols", "Unicode" }
 		libdirs          { "lib/" .. action .. "/debug" }
+	filter {}
 
 	-- Release configuration
 	filter { "release" }
@@ -54,6 +55,7 @@ solution "chirp"
 		defines          { "NDEBUG" }
 		flags            { "Unicode" }
 		libdirs          { "lib/" .. action .. "/release" }
+	filter {}
 
 -- Include the solution projects
 include "tests"
