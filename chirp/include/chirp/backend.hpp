@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include <functional>
+#include <vector>
 
 namespace chirp
 {
@@ -65,6 +66,9 @@ namespace chirp
 				///
 				///
 				virtual std::unique_ptr<audio_stream> create_audio_stream( audio_format const& format ) = 0;
+
+				///
+				virtual bool operator==(output_device const& other) const = 0;
 		};
 
 		/// Interface for audio platform implementations
@@ -73,13 +77,18 @@ namespace chirp
 		class platform
 		{
 			public:
+				using output_device_ptr = std::shared_ptr<output_device>;
+				using output_device_collection = std::vector<output_device_ptr>;
+
 				/// Pure virtual destructor
 				virtual ~platform() = 0;
 
 				///
 				///
 				///
-				virtual std::shared_ptr<output_device> default_output_device() const = 0;
+				virtual output_device_ptr default_output_device() const = 0;
+
+				virtual output_device_collection get_output_devices() const = 0;
 
 
 		};

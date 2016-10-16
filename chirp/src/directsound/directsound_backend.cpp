@@ -42,7 +42,7 @@ namespace chirp
 
 		// directsound_platform default constructor
 		directsound_platform::directsound_platform() :
-			_output_devices( get_output_devices() )
+			_output_devices( get_directsound_output_devices() )
 		{
 		}
 		// directsound_platform destructor
@@ -50,7 +50,7 @@ namespace chirp
 		}
 
 		// directsound_platform::default_ouput_device()
-		std::shared_ptr<output_device> directsound_platform::default_output_device() const {
+		directsound_platform::output_device_ptr directsound_platform::default_output_device() const {
 			auto it = std::find_if( std::begin(_output_devices), std::end(_output_devices),
 				[]( output_device_ptr const& device_ptr ){
 					return device_ptr->guid() == DSDEVID_DefaultPlayback;
@@ -61,8 +61,13 @@ namespace chirp
 			return *it;
 		}
 
-		// directsound_platform::enumerate_output_devices()
+		// directsound_platform::get_output_devices()
 		directsound_platform::output_device_collection directsound_platform::get_output_devices() const {
+			return output_device_collection( std::begin(_output_devices), std::end(_output_devices) );
+		}
+
+		// directsound_platform::get_directsound_output_devices()
+		directsound_platform::directsound_output_device_collection directsound_platform::get_directsound_output_devices() const {
 			output_device_collection result;
 			auto hr = ::DirectSoundEnumerateA(reinterpret_cast<LPDSENUMCALLBACKA>(enumProc), reinterpret_cast<LPVOID>(&result));
 			if( FAILED(hr) ) {
@@ -84,6 +89,12 @@ namespace chirp
 				}
 			}
 			return std::make_unique<directsound_audio_stream>( *this, format );
+		}
+
+		// operator==()
+		bool directsound_output_device::operator==(chirp::backend::output_device const& other ) const {
+			auto ptr = dynamic_cast<directsound_output_device const*>(&other);
+			return ptr != nullptr && ptr->_guid == _guid;
 		}
 
 		// ensure_play_thread_is_running()

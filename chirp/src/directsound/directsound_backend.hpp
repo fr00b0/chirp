@@ -293,8 +293,8 @@ namespace chirp
 		{
 			public:
 				// typedefs
-				using output_device_ptr = std::shared_ptr<directsound_output_device>;
-				using output_device_collection = std::vector<output_device_ptr>;
+				using directsound_output_device_ptr = std::shared_ptr<directsound_output_device>;
+				using directsound_output_device_collection = std::vector<directsound_output_device_ptr>;
 
 				/// Default constructor
 				directsound_platform();
@@ -303,16 +303,19 @@ namespace chirp
 
 
 				/// Create an instance of the default outout device
-				std::shared_ptr<output_device> default_output_device() const override;
+				output_device_ptr default_output_device() const override;
+
+				/// @returns collection of output devices
+				output_device_collection get_output_devices() const override;
 
 			private:
 
 				/// Retrieve a collection of all available output devices
 				/// @returns Collection of output devices
-				output_device_collection get_output_devices() const;
+				directsound_output_device_collection get_ds_output_devices() const;
 
 				/// Collection with all available output devices
-				output_device_collection _output_devices;
+				directsound_output_device_collection _output_devices;
 		};
 	}   // namespace backend
 }   // namespace chirp

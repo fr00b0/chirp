@@ -17,6 +17,11 @@ namespace test
 			throw std::exception{};
 		}
 
+		bool operator==(chirp::backend::output_device const& other) const override {
+			return dynamic_cast<output_device const*>(&other) != nullptr &&
+			       _name == other.name();
+		}
+
 		std::string _name;
 	};
 }   // namespace test

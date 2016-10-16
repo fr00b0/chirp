@@ -45,6 +45,14 @@ namespace chirp
 				return audio_stream{ format, _device_ptr->create_audio_stream( format ) };
 			}
 
+			///
+			///
+			///
+			bool operator==(output_device const& other) const {
+				return _device_ptr != nullptr &&
+					   (*_device_ptr) == (*other._device_ptr);
+			}
+
 		private:
 			std::shared_ptr<backend::output_device> _device_ptr;
 	};

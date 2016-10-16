@@ -27,9 +27,17 @@ namespace chirp
 			/// Constructor with given content
 			/// @tparam T        Type of content
 			/// @param content   Content to initialize the container with
+			/*
 			template <class T>
 			output_devices( T&& content ) :
 				_devices( std::forward<T>(content) )
+			{}
+			*/
+
+			/// Construct from iterator range
+			template <class It>
+			output_devices( It begin, It end ) :
+				_devices( begin, end )
 			{}
 
 			/// Construct from initializer list containing output device
