@@ -53,7 +53,7 @@ class arguments
 std::int16_t sinewave_sample( int frequency, chirp::duration_type time )
 {
 	auto seconds = std::chrono::duration_cast< std::chrono::duration<float> >(time).count();
-	auto value = std::sinf( frequency * two_pi * seconds );
+	auto value = std::sin( frequency * two_pi * seconds );
 	return static_cast<std::int16_t>( std::numeric_limits<std::int16_t>::max() * value );
 }
 
