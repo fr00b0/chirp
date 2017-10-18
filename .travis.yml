@@ -1,0 +1,32 @@
+dist: trusty
+sudo: required
+language: cpp
+
+matrix:
+  include:
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+      env: COMPILER=g++-5
+
+
+before_install:
+  - wget https://github.com/premake/premake-core/releases/download/v5.0.0-alpha12/premake-5.0.0-alpha12-src.zip -O
+  premake.zip
+  - unzip premake.zip
+  - make config=release
+  - cd ../../..
+  - mv premake-5.0.0-alpha12/bin/release/premake5 premake5
+
+before_script:
+ - premake5 gmake
+ - export CXX=$COMPILER
+ - $CXX --version
+
+script:
+ - make -C build/gmake config=release
+ - bin/gmake/release/chirp_tests
