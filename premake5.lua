@@ -20,11 +20,11 @@ solution "chirp"
 	configurations       { "debug", "release" }
 	warnings             "Extra"
 	flags                { "FatalWarnings" }
+	cppdialect           "C++14"
 
 	-- Add some flags for gmake builds
 	if _ACTION == "gmake" then
 		buildoptions     { "-Wall" }
-		buildoptions     { "-std=c++11" }
 	end
 
 	-- Provide a default for the "shared" option
@@ -44,7 +44,8 @@ solution "chirp"
 	filter { "debug" }
 		targetdir        ( "bin/" .. action .. "/debug" )
 		defines          { "_DEBUG", "DEBUG" }
-		flags            { "Symbols", "Unicode" }
+		characterset     ("Unicode")
+		symbols          "On"
 		libdirs          { "lib/" .. action .. "/debug" }
 	filter {}
 
@@ -53,7 +54,7 @@ solution "chirp"
 		targetdir        ( "bin/" .. action .. "/release" )
 		optimize         ( "Full" )
 		defines          { "NDEBUG" }
-		flags            { "Unicode" }
+		characterset     ("Unicode")
 		libdirs          { "lib/" .. action .. "/release" }
 	filter {}
 
