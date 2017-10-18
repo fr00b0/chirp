@@ -18,8 +18,10 @@ namespace chirp
 				request = default_backend();
 			}
 			switch( request ) {
+#if defined(CHIRP_WITH_DIRECTSOUND)
 				case backend_identity::directsound:
 					return std::make_unique<backend::directsound_platform>();
+#endif
 
 				default:
 					throw unknown_backend_exception{};

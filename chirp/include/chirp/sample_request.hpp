@@ -3,6 +3,8 @@
 
 #include <chirp/audio_format.hpp>
 
+#include <functional>
+
 namespace chirp
 {
 
