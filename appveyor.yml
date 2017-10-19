@@ -10,4 +10,4 @@ configuration:
   - Release
 
 test_script:
-  - bin\vs2017\$(configuration)\chirp_tests.exe
+  - bin\vs2017\%CONFIGURATION%\chirp_tests.exe
