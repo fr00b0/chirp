@@ -22,10 +22,12 @@ before_install:
   - cd ../../..
   - mv premake-5.0.0-alpha12/bin/release/premake5 premake5
   - pwd
+  - ls -la
 
 before_script:
  - pwd
- - ../premake5 gmake
+ - ls -la
+ - ./premake5 gmake
  - export CXX=$COMPILER
  - $CXX --version
 
