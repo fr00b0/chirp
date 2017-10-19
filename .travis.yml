@@ -23,9 +23,7 @@ before_install:
   - mv premake-5.0.0-alpha12/bin/release/premake5 premake5
 
 before_script:
- - pwd
- - cd chirp
- - premake5 gmake
+ - ../premake5 gmake
  - export CXX=$COMPILER
  - $CXX --version
 
