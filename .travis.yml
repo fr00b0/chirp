@@ -15,6 +15,7 @@ matrix:
         - COMPILER=g++-5
 
 before_install:
+  - sudo apt-get install -y libasound-dev
   - wget https://github.com/premake/premake-core/releases/download/v5.0.0-alpha12/premake-5.0.0-alpha12-src.zip -O premake.zip
   - unzip premake.zip
   - cd premake-5.0.0-alpha12/build/gmake.unix
