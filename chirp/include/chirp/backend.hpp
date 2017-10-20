@@ -104,6 +104,23 @@ namespace chirp
 		// destructor implementation
 		inline output_device::~output_device() {
 		}
+
+		/// Base class for undefined platforms (i.e. platforms that has been disabled by config)
+		class undefined_platform :
+			public platform
+		{
+			public:
+				undefined_platform() {
+					throw unknown_backend_exception{};
+				}
+				output_device_ptr default_output_device() const override {
+					throw backend_exception{};
+				}
+				output_device_collection get_output_devices() const override {
+					throw backend_exception{};
+				}
+		};
+
 	}   // namespace backend
 }   // namespace chirp
 

@@ -165,5 +165,19 @@ namespace chirp
 	} // namespace backend
 } // namespace chirp
 
-#endif // defined(CHIRP_WITH_ALSA)
-#endif // IG_CHIRP_SRC_ALSA_BACKEND_HPP
+#else   // defined(CHIRP_WITH_ALSA)
+
+#include <chirp/backend.hpp> 
+#include <chirp/exceptions.hpp>
+
+namespace chirp {
+	namespace backend {
+		// The alsa_platform is undefined wihtout alsa
+		class alsa_platform :
+			public undefined_platform
+		{};
+	} // namespace backend
+} // namespace chirp
+
+#endif   // defined(CHIRP_WITH_ALSA)
+#endif   // IG_CHIRP_SRC_ALSA_BACKEND_HPP

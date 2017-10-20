@@ -323,5 +323,18 @@ namespace chirp
 	}   // namespace backend
 }   // namespace chirp
 
+#else   // defined(CHIRP_WITH_DIRECTSOUND)
+
+#include <chirp/backend.hpp>
+#include <chirp/exceptions.hpp>
+
+namespace chirp {
+	namespace backend {
+		// The directsound_platform is undefined wihtout directsound
+		class directsound_platform :
+			public undefined_platform
+		{};
+	} // namespace backend
+} // namespace chirp
 #endif   // defined(CHIRP_WITH_DIRECTSOUND)
 #endif   // IG_CHRIP_DIRECTSOUND_BACKEND_HPP
