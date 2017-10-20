@@ -8,4 +8,10 @@
 #	undef CHIRP_WITH_DIRECTSOUND
 #endif
 
+#if __linux__ && !defined(CHIRP_WITHOUT_ALSA)
+#	define CHIRP_WITH_ALSA
+#else
+#	undef CHIRP_WITH_ASLA
+#endif
+
 #endif

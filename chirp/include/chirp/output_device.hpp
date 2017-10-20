@@ -29,6 +29,9 @@ namespace chirp
 			output_device( std::shared_ptr<backend::output_device> device ) :
 				_device_ptr(device)
 			{
+				if( _device_ptr == nullptr ) {
+					throw output_device_exception{};
+				}
 			}
 
 			///

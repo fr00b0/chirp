@@ -13,3 +13,9 @@ project "chirp_tests"
 	-- Visual studio builds needs directsound library
 	filter { "action:vs*" }
 		links     { "dsound", "dxguid" }
+	filter {}
+
+	-- Linux builds needs alsa
+	filter { "action:gmake" }
+		links	{ "asound" }
+	filter {}

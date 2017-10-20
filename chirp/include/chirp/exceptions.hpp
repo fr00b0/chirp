@@ -21,6 +21,9 @@ namespace chirp
 	/// Exception type for errors emitted from the backend implementation
 	struct backend_exception : exception {};
 
+	/// Exception type for errors when creating output devices
+	struct output_device_exception : exception {};
+
 }   // namespace chirp
 
 #endif   // IG_CHIRP_EXCEPTIONS_HPP

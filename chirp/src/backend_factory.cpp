@@ -3,6 +3,7 @@
 
 // backend implementations
 #include "directsound/directsound_backend.hpp"
+#include "alsa/alsa_backend.hpp"
 
 namespace chirp
 {
@@ -22,7 +23,10 @@ namespace chirp
 				case backend_identity::directsound:
 					return std::make_unique<backend::directsound_platform>();
 #endif
-
+#if defined(CHIRP_WITH_ALSA)
+				case backend_identity::alsa:
+					return std::make_unique<backend::alsa_platform>();
+#endif
 				default:
 					throw unknown_backend_exception{};
 			};
@@ -34,9 +38,13 @@ namespace chirp
 		backend_identity default_backend() {
 #if defined(CHIRP_WITH_DIRECTSOUND)
 			return backend_identity::directsound;
-#else
-			throw no_default_backend{};
 #endif
+
+#if defined(CHIRP_WITH_ALSA)
+			return backend_identity::alsa;
+#endif
+
+			throw no_default_backend{};
 		}
 	}   // namespace backend
 }   // namespace chirp

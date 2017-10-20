@@ -15,6 +15,12 @@ project "sinewave"
 		links   { "dsound", "dxguid" }
 	filter {}
 
+	-- Linux builds needs alsa
+	filter { "action:gmake" }
+		links	{ "asound" }
+	filter {}
+
+
 	-- Debug configuration
 	filter { "debug" }
 		targetdir( "../../bin/" .. action .. "/debug/examples" )

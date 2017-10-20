@@ -14,7 +14,8 @@ namespace chirp
 	enum class backend_identity {
 		/// Use the default implementation for the current platform
 		platform_default,
-		directsound
+		directsound,
+		alsa
 	};
 
 	/// Audio platform
