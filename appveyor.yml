@@ -1,5 +1,7 @@
 image: Visual Studio 2017
 
+version: "#{build}"
+
 install:
   - ps: Start-FileDownload 'https://github.com/premake/premake-core/releases/download/v5.0.0-alpha12/premake-5.0.0-alpha12-windows.zip' 'premake.zip'
   - 7z x premake.zip
