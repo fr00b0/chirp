@@ -143,7 +143,7 @@ namespace {
 
 namespace chirp {
 	namespace backend {
-		
+
 		// alsa_platform constructor
 		alsa_platform::alsa_platform() :
 			_output_devices(all_pcm_output_devices())
@@ -174,5 +174,8 @@ namespace chirp {
 	} // namespace backend
 } // namespace chirp
 
+#else // defined(CHIRP_WITH_ALSA)
+
+namespace { int dummy = 0; // to avoid linker errors about translation units without symbols }
 
 #endif // defined(CHIRP_WITH_ALSA)
