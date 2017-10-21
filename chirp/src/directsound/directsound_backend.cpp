@@ -291,5 +291,9 @@ namespace chirp
 	}   // namespace backend
 }   // namespace chirp
 #else   // defined(CHIRP_WITH_DIRECTSOUND)
-namespace { int dummy = 0; // to avoid linker errors about translation units without symbols }
+
+namespace {
+	int dummy = 0; // to avoid linker errors about translation units without symbols
+}
+
 #endif   // defined(CHIRP_WITH_DIRECTSOUND)
